@@ -9,11 +9,11 @@ pub fn LinkedList(comptime T: type) type {
 
         const Self = @This();
 
-        pub fn init(allocator: std.mem.Allocator) Self {
-            return Self{ .head = null, .tail = null, .length = 0, .allocator = allocator };
+        pub fn new(allocator: std.mem.Allocator) Self {
+            return LinkedList(T){ .head = null, .tail = null, .length = 0, .allocator = allocator };
         }
 
-        pub fn deinit(self: *Self) void {
+        pub fn free(self: *Self) void {
             var current = self.head;
             while (current) |node| {
                 const next = node.next;

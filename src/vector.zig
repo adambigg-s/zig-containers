@@ -11,13 +11,18 @@ pub fn Vec(comptime T: type) type {
         const ReallocCondition: usize = 2;
         const ReallocSize: usize = 2;
 
-        pub fn init(allocator: std.mem.Allocator) Self {
-            const data = [_]T{};
-            return Self{ .data = &data, .length = 0, .capacity = 0, .allocator = allocator };
+        pub fn new(allocator: std.mem.Allocator) Self {
+            return Vec(T){ .data = &[_]T{}, .length = 0, .capacity = 0, .allocator = allocator };
         }
 
-        pub fn deiniet(self: *Self) void {
+        pub fn free(self: *Self) void {
             self.allocator.free(self.data);
+        }
+
+        pub fn initCapacity(self: *Self, capacity: usize) !*Self {
+            self.data = try self.allocator.alloc(T, capacity);
+            self.capacity = capacity;
+            return self;
         }
 
         pub fn debugDisplay(self: *Self) void {
@@ -28,9 +33,8 @@ pub fn Vec(comptime T: type) type {
             std.debug.print("]\n", .{});
         }
 
-        pub fn initCapacity(self: *Self, capacity: usize) !void {
-            self.data = try self.allocator.alloc(T, capacity);
-            self.capacity = capacity;
+        pub fn splat(self: *Self, value: T) void {
+            @memset(self.data, value);
         }
 
         pub fn pushBack(self: *Self, value: T) !void {
@@ -44,9 +48,7 @@ pub fn Vec(comptime T: type) type {
 
         fn realloc(self: *Self, capacity: usize) !void {
             const replacement = try self.allocator.alloc(T, capacity);
-            for (0..self.length) |idx| {
-                replacement[idx] = self.data[idx];
-            }
+            @memcpy(replacement[0..self.length], self.data[0..self.length]);
 
             self.allocator.free(self.data);
             self.data = replacement;
