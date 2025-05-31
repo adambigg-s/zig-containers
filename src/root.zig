@@ -122,12 +122,20 @@ pub const World = struct {
     fn indexDelta(self: *Self, x: usize, y: usize, dx: isize, dy: isize) ?usize {
         const xisize: isize, const yisize: isize = .{ @intCast(x), @intCast(y) };
         const nx: isize, const ny: isize = .{ xisize + dx, yisize + dy };
-        const xp: usize, const yp: usize = .{ @bitCast(nx), @bitCast(ny) };
+        const wrapx: isize, const wrapy: isize = .{
+            Self.worldWrapCoordinate(nx, @intCast(self.width)),
+            Self.worldWrapCoordinate(ny, @intCast(self.height)),
+        };
+        const xp: usize, const yp: usize = .{ @bitCast(wrapx), @bitCast(wrapy) };
 
         if (!self.curr.inbounds(xp, yp)) {
             return null;
         }
         return self.curr.index(xp, yp);
+    }
+
+    fn worldWrapCoordinate(value: isize, max: isize) isize {
+        return @mod(((@mod(value, max)) + max), max);
     }
 
     fn flipGrids(self: *Self) void {
